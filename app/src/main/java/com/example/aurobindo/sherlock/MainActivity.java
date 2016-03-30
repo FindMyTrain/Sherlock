@@ -3,6 +3,17 @@ package com.example.aurobindo.sherlock;
  * Created by aurobindo on 29/3/16.
  */
 
+/**
+ * Author
+ █████╗ ██╗   ██╗██████╗  ██████╗
+ ██╔══██╗██║   ██║██╔══██╗██╔═══██╗
+ ███████║██║   ██║██████╔╝██║   ██║
+ ██╔══██║██║   ██║██╔══██╗██║   ██║
+ ██║  ██║╚██████╔╝██║  ██║╚██████╔╝
+ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝
+
+ */
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -68,9 +79,11 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
     public MyPhoneStateListener MyListener;
     public List<NeighboringCellInfo> info;
     public int flag = 0;
+    public boolean startFlag=false, saveFlag=false, stopFlag = false;
     public long tStart, tEnd = 0, tDelta = 0;
     public File externalStorageDirectory;
     public FileWriter filewriter;
+    public FileWriter filewriterData;
     public String SERVER_IP = "http://10.129.156.212/tracker/";
 
     @Override
@@ -150,63 +163,91 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
     public void onClick(View v) {
         if(v.getId()==R.id.btnstart)
         {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                return;
+            if(stopFlag)    {
+                Toast.makeText(getApplicationContext(),"Please Restart the App !!! ",Toast.LENGTH_SHORT).show();
             }
-            GPSmgr.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,GPSlistener);
-            GSMmgr.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,GSMlistener);
-            flag=1;
-            background.start();
-            wifi.start();
+            else if(!startFlag) {
+                startFlag = true;
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    return;
+                }
+                GPSmgr.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, GPSlistener);
+                GSMmgr.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, GSMlistener);
+                flag = 1;
+                background.start();
+                wifi.start();
 
-            Date date = new Date();
+                Date date = new Date();
 
-            try {
-                filewriter = new FileWriter(new File(externalStorageDirectory,
-                        "motionData.csv"), true);
-            } catch (IOException e) {
-                Toast.makeText(getApplicationContext(),"Something unexpected happened",Toast.LENGTH_SHORT).show();
+                try {
+                    filewriter = new FileWriter(new File(externalStorageDirectory,
+                            "motionData.csv"), true);
+                    filewriterData = new FileWriter(new File(externalStorageDirectory,
+                            "Data.csv"), true);
+                } catch (IOException e) {
+                    Toast.makeText(getApplicationContext(), "Something unexpected happened", Toast.LENGTH_SHORT).show();
+                }
+
+                tStart = System.currentTimeMillis();
+
+                sensormanager.registerListener((SensorEventListener) this,
+                        sensormanager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                        SensorManager.SENSOR_DELAY_UI);
+                sensormanager.registerListener((SensorEventListener) this,
+                        sensormanager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
+                        SensorManager.SENSOR_DELAY_UI);
+                sensormanager.registerListener((SensorEventListener) this,
+                        sensormanager.getDefaultSensor(Sensor.TYPE_GRAVITY),
+                        SensorManager.SENSOR_DELAY_UI);
+                sensormanager.registerListener((SensorEventListener) this,
+                        sensormanager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+                        SensorManager.SENSOR_DELAY_UI);
+
+                sensormanager.registerListener((SensorEventListener) this,
+                        sensormanager.getDefaultSensor(Sensor.TYPE_PRESSURE),
+                        SensorManager.SENSOR_DELAY_UI);
+
+                Toast.makeText(getApplicationContext(),
+                        "Accelerometer, Gyroscope & Barometer Started !!!", Toast.LENGTH_SHORT).show();
             }
-
-            tStart = System.currentTimeMillis();
-
-            sensormanager.registerListener((SensorEventListener) this,
-                    sensormanager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-                    SensorManager.SENSOR_DELAY_UI);
-            sensormanager.registerListener((SensorEventListener) this,
-                    sensormanager.getDefaultSensor(Sensor.TYPE_GYROSCOPE),
-                    SensorManager.SENSOR_DELAY_UI);
-            sensormanager.registerListener((SensorEventListener) this,
-                    sensormanager.getDefaultSensor(Sensor.TYPE_GRAVITY),
-                    SensorManager.SENSOR_DELAY_UI);
-            sensormanager.registerListener((SensorEventListener) this,
-                    sensormanager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
-                    SensorManager.SENSOR_DELAY_UI);
-
-            sensormanager.registerListener((SensorEventListener) this,
-                    sensormanager.getDefaultSensor(Sensor.TYPE_PRESSURE),
-                    SensorManager.SENSOR_DELAY_UI);
-
-            Toast.makeText(getApplicationContext(),
-                    "Accelerometer, Gyroscope & Barometer Started !!!", Toast.LENGTH_SHORT).show();
+            else
+                Toast.makeText(getApplicationContext(),
+                        "Application Already Started !!!", Toast.LENGTH_SHORT).show();
         }
         else if(v.getId()==R.id.btnstop)
         {
-            flag=0;
-            GPSmgr.removeUpdates(GPSlistener);
-            GSMmgr.removeUpdates(GSMlistener);
-            Toast.makeText(getApplicationContext(),"Data Collection Stoppped !!!",Toast.LENGTH_SHORT).show();
+            if(startFlag) {
+                stopFlag = true;
+                flag = 0;
+                GPSmgr.removeUpdates(GPSlistener);
+                GSMmgr.removeUpdates(GSMlistener);
+                sensormanager.unregisterListener(this);
+                try {
+                    filewriter.close();
+                    filewriterData.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                Toast.makeText(getApplicationContext(), "Data Collection Stoppped !!!", Toast.LENGTH_SHORT).show();
+            }
+            else Toast.makeText(getApplicationContext(), "Application not Started !!!", Toast.LENGTH_SHORT).show();
         }
         else if(v.getId()==R.id.btnsave)
         {
-            save.start();
-            Toast.makeText(getApplicationContext(),"All Data has been saved !!! ",Toast.LENGTH_SHORT).show();
+            if(!saveFlag) {
+                saveFlag = true;
+                save.start();
+                Toast.makeText(getApplicationContext(), "All Data has been saved !!! ", Toast.LENGTH_SHORT).show();
+            }
+            else    {
+                Toast.makeText(getApplicationContext(), "Restart App !!! ", Toast.LENGTH_SHORT).show();
+            }
         }
         else if(v.getId()==R.id.btnsync)
         {
             //syncing code here
-            sync.start();
-            Toast.makeText(getApplicationContext(),"All Data Synced !!!",Toast.LENGTH_SHORT).show();
+            //sync.start();
+            Toast.makeText(getApplicationContext(),"Please don't press this button. It's Useless !!!",Toast.LENGTH_SHORT).show();
         }
     }
     Thread wifi=new Thread()
@@ -223,7 +264,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
                     List<ScanResult> wifiScanList = mainWifiObj.getScanResults();
                     int length=wifiScanList.size();
                     for(int i = 0; i < length; i++){
-                        wifiinfo += wifiScanList.get(i).BSSID.toString()+","+wifiScanList.get(i).SSID.toString()+","+Integer.toString(wifiScanList.get(i).level)+";";
+                        wifiinfo += wifiScanList.get(i).BSSID.toString()+";"+wifiScanList.get(i).SSID.toString()+";"+Integer.toString(wifiScanList.get(i).level)+",";
                     }
                 }
                 catch(InterruptedException e){
@@ -243,8 +284,14 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
                 try {
                     Thread.sleep(2000);
                     GsmCellLocation loc=(GsmCellLocation)tm.getCellLocation();
-                    cid=String.valueOf(loc.getCid() & 0xffff);
-                    lac=String.valueOf(loc.getLac());
+                    try{
+                        cid=String.valueOf(loc.getCid() & 0xffff);
+                        lac=String.valueOf(loc.getLac());
+                    }
+                    catch(NullPointerException ne) {
+                        cid = "0";
+                        lac = "0";
+                    }
                     mccmnc=tm.getNetworkOperator();
                     operator=tm.getNetworkOperatorName();
                     info=tm.getNeighboringCellInfo();
@@ -257,11 +304,15 @@ public class MainActivity extends ActionBarActivity implements OnClickListener, 
                     tEnd = System.currentTimeMillis();
                     tDelta = tEnd - tStart;
                     db.insertData(GPSLat, GPSLong, GPSAccuracy, GSMLat, GSMLong, GSMAccuracy, cid, lac, rssi, mccmnc, operator, neighinfo, Long.toString(tDelta), wifiinfo);
+                    try {
+                        filewriterData.append(GPSLat + "," + GPSLong + "," + GPSAccuracy + "," + GSMLat + "," + GSMLong + "," + GSMAccuracy + "," + cid + "," + lac + "," + rssi + "," + mccmnc + "," + operator + "," + neighinfo + "," + Long.toString(tDelta) + "," + wifiinfo + "\n");
+                    } catch (IOException e) {}
+
                     runOnUiThread(new Runnable() {
 
                         @Override
                         public void run() {
-                            txtdata.setText(GPSLat+"/"+GSMLat+"/"+cid+":"+rssi+"/"+wifiinfo+"/"+tDelta);
+                            txtdata.setText(GPSLat + " || " + GPSLong + " || " + cid + " || " + rssi + " || " + tDelta);
                         }
                     });
                     neighinfo="";

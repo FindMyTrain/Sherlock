@@ -1,44 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
+
+
+
     <TextView
         android:id="@+id/txtdata"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="109dp"
         android:maxLines="4"
         android:scrollHorizontally="false"
-        android:text="gpsLat/gsmLat/cid/RSSI" />
+        android:text="Lat || Long || cid || RSSI || time"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center_vertical|center_horizontal"
+        android:textColor="#1000FF"
+        android:textSize="20sp"
+        android:focusable="false" />
+
 
     <Button
         android:id="@+id/btnstart"
-        android:layout_width="wrap_content"
+        android:layout_width="154dp"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="20dp"
-        android:text="Start" />
-
+        android:layout_marginLeft="0dp"
+        android:text="Start"
+        android:layout_gravity="center_horizontal"
+        android:width="@dimen/abc_action_bar_content_inset_material" />
 
     <Button
         android:id="@+id/btnstop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="20dp"
-        android:text="Stop" />
+        android:layout_marginLeft="0dp"
+        android:text="Stop"
+        android:layout_gravity="center_horizontal" />
 
     <Button
         android:id="@+id/btnsave"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="20dp"
-        android:text="Save To File" />
+        android:layout_marginLeft="0dp"
+        android:text="Save To File"
+        android:layout_gravity="center_horizontal" />
 
     <Button
         android:id="@+id/btnsync"
-        android:layout_width="wrap_content"
+        android:layout_width="403dp"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="20dp"
-        android:text="Sync Data" />
+        android:layout_marginLeft="0dp"
+        android:text="Sync Data"
+        android:layout_gravity="center_horizontal" />
 
-</LinearLayout>
+</TableLayout>
